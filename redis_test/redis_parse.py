@@ -6,6 +6,9 @@ import pickle
 from rediscluster import StrictRedisCluster
 import threading
 import sys
+import concurrent.futures
+
+
 
 # my_host = "stage-redis-cluster.u1td7d.clustercfg.cnn1.cache.amazonaws.com.cn"
 rediscluster_host = sys.argv[1]
@@ -99,11 +102,10 @@ print("len: ", len(funcs))
 def work(f):
     f.func(*f.args, **f.kwargs)
 
-
-for idx, f in enumerate(funcs):
-    if idx % 1000 == 0:
-        print(idx)
-    t = threading.Thread(target=work, args=(f,))
-    t.start()
+with concurrent.futures.ThreadPoolExecutor(max_workers = 1000) as executor:
+    for idx, f in enumerate(funcs):
+        if idx % 1000 == 0:
+            print(idx)
+        executor.submit(work, f)
 end = time.time()
 print("cost: ", end - start)
